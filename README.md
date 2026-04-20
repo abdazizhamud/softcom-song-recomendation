@@ -1,8 +1,8 @@
-﻿# 🎵 SONIC MIND — Panduan Penggunaan Aplikasi
+﻿# 🎵 THE INTELLIGENCE BATTLE — Panduan Penggunaan Aplikasi
 
 **Proyek UTS Soft Computing**
 
-**Judul:** The Intelligence Battle: Human Expert vs. Evolutionary Tuning & Neuro-Fuzzy
+**Judul:** The Intelligence Battle: Human Expert vs. GA-Tuned FIS vs. Neuro-Fuzzy ANN
 
 **Mahasiswa:** 
 
@@ -33,11 +33,13 @@ pandas>=2.0.0           # Manipulasi dataset
 numpy>=1.26.0           # Komputasi numerik (WAJIB untuk model ANN)
 matplotlib>=3.8.0       # Plotting dasar
 plotly>=5.20.0          # Visualisasi interaktif (radar chart, bar chart, heatmap)
-scikit-learn>=1.4.0     # Utilitas preprocessing (opsional)
+scikit-learn>=1.4.0     # Utilitas preprocessing
+deap>=1.4.1             # Framework Genetic Algorithm
 ```
 
-> **Catatan:** Library `scikit-fuzzy` TIDAK digunakan. Sistem Fuzzy Mamdani
-> diimplementasi dari nol menggunakan NumPy agar lebih transparan dan edukatif.
+> **Catatan:** 
+> - Sistem Fuzzy Mamdani diimplementasi dari nol menggunakan NumPy (no scikit-fuzzy)
+> - DEAP library digunakan untuk optimasi GA (Distributed Evolutionary Algorithms in Python)
 
 ---
 
@@ -48,7 +50,7 @@ scikit-learn>=1.4.0     # Utilitas preprocessing (opsional)
 Pastikan folder proyek Anda memiliki struktur berikut:
 
 ```
-sonic-mind/
+song-recomendation-softcom/
 ├── app.py                  ← File utama Streamlit
 ├── requirements.txt        ← Daftar dependensi
 ├── dataset.csv             ← (Opsional) Dataset lagu Spotify Anda
@@ -59,8 +61,9 @@ sonic-mind/
 │   └── loader.py           ← Modul pemuat dataset
 └── models/
     ├── __init__.py
-    ├── fuzzy_manual.py     ← Model A: Mamdani FIS
-    └── neuro_fuzzy.py      ← Model B: Neuro-Fuzzy ANN
+    ├── fuzzy_manual.py     ← Model A: Mamdani FIS (Manual)
+    ├── genetic_fuzzy.py    ← Model B: GA-Tuned FIS (Genetic Algorithm Optimization)
+    └── neuro_fuzzy.py      ← Model C: Neuro-Fuzzy ANN (Adaptive Neural)
 ```
 
 ### Langkah 2 — (Opsional) Siapkan Dataset
@@ -145,86 +148,166 @@ Atur preferensi musik Anda menggunakan **6 slider**:
 | 🎸 Rock | 0.8 | 0.45 | 0.4 | 0.07 | 0.15 | 65 |
 | 🎵 Jazz | 0.35 | 0.5 | 0.55 | 0.05 | 0.65 | 40 |
 
-### 2. Tombol "Generate Recommendations" 🚀
+### 2. Konfigurasi Genetic Algorithm (Opsional)
+
+Sebelum generate, Anda bisa menyesuaikan parameter GA di bagian **⚙️ Genetic Algorithm Settings**:
+
+| Parameter | Rentang | Default | Penjelasan |
+|-----------|---------|---------|------------|
+| **Population Size** | 10–80 | 40 | Jumlah individu (MF sets) dalam satu generasi |
+| **Max Generations** | 10–120 | 50 | Jumlah iterasi evolusi |
+| **Mutation Rate** | 0.05–0.40 | 0.15 | Probabilitas perubahan gen (centers/sigmas) |
+| **Crossover Rate** | 0.50–1.00 | 0.80 | Probabilitas crossover (uniform crossover) |
+| **Random Seed** | 0–9999 | 42 | Untuk reproducibilitas hasil |
+
+> **Tips:** 
+> - Pop Size 30–60 = sweet spot (akurasi tinggi, waktu wajar)
+> - Gen 40–80 = GA biasanya konvergen di sini
+> - Mutation 0.10–0.20 = balance antara eksplorasi & eksploitasi
+
+### 3. Tombol "Generate Recommendations" 🚀
 
 Klik tombol di bagian bawah sidebar untuk memulai proses rekomendasi.
-Kedua model (FIS dan Neuro-Fuzzy) akan berjalan **secara bersamaan** dan
-hasilnya ditampilkan berdampingan.
+Ketiga model (FIS Manual, GA-Tuned FIS, dan Neuro-Fuzzy ANN) akan berjalan
+**secara bersamaan** dan hasilnya ditampilkan berdampingan.
 
-### 3. Membaca Hasil Rekomendasi
+**Durasi Eksekusi:**
+- Model A (FIS Manual): ~100–200 ms (instant)
+- Model B (GA-Tuned FIS): ~30–80 s (tergantung pop size & gen)
+- Model C (Neuro-Fuzzy ANN): ~200–500 ms (setelah training diload dari cache)
 
-Hasil ditampilkan dalam **2 kolom**:
+### 4. Membaca Hasil Rekomendasi
 
-**Kolom Kiri — 👤 Model A: Human Expert FIS**
+Hasil ditampilkan dalam **3 kolom**:
+
+**Kolom Kiri — 👤 Model A: FIS Manual**
 
 - Tabel berisi 5 lagu terbaik menurut sistem fuzzy manual
-- Badge biru menunjukkan waktu eksekusi (biasanya < 100 ms)
-- Kolom: Track Name | Artist | Match Score | Energy | Dance | Valence
+- Badge biru menunjukkan waktu eksekusi (biasanya 100–200 ms)
+- Sumber: Rule-based Mamdani FIS
 
-**Kolom Kanan — 🤖 Model B: Neuro-Fuzzy (ANN)**
+**Kolom Tengah — 🧬 Model B: GA-Tuned FIS**
+
+- Tabel berisi 5 lagu terbaik menurut GA-optimized FIS
+- Badge hijau menunjukkan durasi GA evolution & best fitness
+- Sumber: Membership functions yang sudah di-evolusi GA
+
+**Kolom Kanan — 🤖 Model C: Neuro-Fuzzy ANN**
 
 - Tabel berisi 5 lagu terbaik menurut model ANN
-- Badge pink menunjukkan waktu eksekusi (biasanya < 50 ms setelah training)
-- Format tabel sama dengan kolom kiri
+- Badge pink menunjukkan waktu eksekusi (< 500 ms)
+- Sumber: Trained neural network
 
 **Banner Pemenang 🏆**
 
-Tepat di bawah kedua tabel, banner emas menampilkan model mana yang
-menghasilkan rata-rata skor lebih tinggi untuk preferensi saat ini.
+Tepat di bawah ketiga tabel, banner emas menampilkan model mana yang
+menghasilkan rata-rata skor TERTINGGI untuk preferensi saat ini, beserta
+perbandingan skor FIS vs GA vs ANN.
 
-### 4. Membaca Visualisasi
+### 5. Membaca Visualisasi & Analisis
 
-Klik tab-tab berikut di bagian bawah halaman:
+Setelah generate, ada 5 tab untuk analisis mendalam:
 
 **Tab 🕸️ Radar Chart**
 
-- Menampilkan 3 poligon: FIS (biru), ANN (pink), Preferensi Anda (kuning)
-- Semakin tumpang tindih poligon model dengan preferensi Anda → semakin relevan rekomendasinya
+- Menampilkan 4 poligon: FIS (biru), GA (hijau), ANN (pink), Preferensi Anda (kuning)
+- Semakin tumpang tindih poligon model dengan preferensi → semakin relevan
 - Sumbu: danceability, energy, valence, speechiness, acousticness
+- **Insight:** Poligon GA biasanya lebih "sharp" ke preferensi Anda vs FIS manual
 
 **Tab 📊 Score Bars**
 
-- Dua bar chart horizontal berdampingan (FIS vs ANN)
-- Setiap bar = satu lagu rekomendasi, panjang bar = skor kecocokan (0–100)
-- Warna lebih terang = skor lebih tinggi
+- Tiga bar chart horizontal berdampingan (FIS, GA, ANN)
+- Setiap bar = satu lagu, panjang = skor kecocokan (0–100)
+- Warna gradient menunjukkan intensitas skor
+- **Insight:** Lihat mana model yang scoring-nya paling sesuai ekspektasi Anda
 
 **Tab 🌡️ Feature Heatmap**
 
-- Grid 10×6: baris = 10 lagu (5 FIS + 5 ANN), kolom = 6 fitur audio
-- Warna terang = nilai fitur tinggi; gelap = rendah
-- Berguna untuk melihat perbedaan karakteristik lagu yang dipilih kedua model
+- Grid 15×6: baris = 15 lagu (5 FIS + 5 GA + 5 ANN), kolom = 6 fitur audio
+- Warna plasma: terang (nilai tinggi) — gelap (nilai rendah)
+- **Insight:** Lihat karakteristik lagu apa yang dipilih masing-masing model
 
-### 5. Analisis Overlap
+**Tab 🧬 GA Convergence**
 
-Di bagian bawah halaman, **Overlap Analysis** menunjukkan:
+- Kurva fitness vs generation untuk GA yang baru saja dijalankan
+- Garis hijau = best fitness per generasi
+- Garis kuning putus-putus = average fitness
+- Shaded area = standar deviasi band
+- **Insight:** Lihat apakah GA konvergen di generasi berapa, ada plateau/improvement?
+- Metrics: Final Best Fitness, Convergence Gen, Pop Size, Total Gen
 
-- Berapa lagu yang hanya direkomendasikan FIS
-- Berapa lagu yang direkomendasikan oleh KEDUA model (sepakat)
-- Berapa lagu yang hanya direkomendasikan ANN
+**Tab 📐 MF Shift**
 
-Semakin besar overlap → kedua model memiliki "pendapat" yang sama tentang
-lagu terbaik untuk preferensi tersebut.
+- Perbandingan visual membership functions sebelum (Manual) vs sesudah (GA-Optimized)
+- Dua subplot: Manual FIS (kiri) vs GA-Optimized (kanan)
+- Tiga kurva per subplot: Low (biru), Mid (kuning), High (pink)
+- Tabel numerik: Delta centers & sigmas untuk melihat pergeseran kuantitatif
+- **Insight:** Apakah GA menggeser MF dengan masuk akal? Atau terjadi overfitting?
+
+### 6. Analisis Overlap
+
+Di bagian bawah halaman, **🔍 Overlap Analysis** menunjukkan:
+
+| Metrik | Penjelasan |
+|--------|------------|
+| **FIS Only** | Lagu yang hanya FIS Manual yang rekomendasikan |
+| **GA Only** | Lagu yang hanya GA-Tuned FIS yang rekomendasikan |
+| **ANN Only** | Lagu yang hanya Neuro-Fuzzy ANN yang rekomendasikan |
+| **FIS & GA** | Lagu yang disepakati FIS Manual & GA |
+| **All 3 Agree** | Lagu yang disepakati KETIGA model (consensus) |
+
+**Interpretasi:**
+- Overlap tinggi (3–5 lagu) → ketiga model punya "opinion" serupa
+- Overlap rendah (0–1 lagu) → tiap model punya preferensi unik
+- All 3 Agree = high confidence lagu → rekomendasi paling andal
 
 ---
 
 ## 🔬 Penjelasan Teknis Singkat
 
-### Mengapa Dua Model Bisa Berbeda?
+### Tiga Paradigma Soft Computing
 
-| Aspek | FIS Manual (Model A) | Neuro-Fuzzy (Model B) |
-|-------|---------------------|----------------------|
-| **Sumber Pengetahuan** | Intuisi manusia/pakar | Data (pseudo-labels) |
-| **Fleksibilitas** | Tetap (hardcoded rules) | Adaptif (learned weights) |
-| **Interpretabilitas** | Sangat tinggi | Sedang |
-| **Waktu Setup** | Instan | Perlu training |
-| **Bias** | Bias pakar | Bias data |
+| Aspek | Model A: FIS Manual | Model B: GA-Tuned FIS | Model C: Neuro-Fuzzy ANN |
+|-------|--------------------|-----------------------|--------------------------|
+| **Paradigma** | Expert System | Evolutionary Algorithm | Neural Network |
+| **Sumber Pengetahuan** | Intuisi manusia/pakar | Rule + Data (fitness function) | Data (supervised learning) |
+| **Parameter Fuzzy** | Hardcoded (manual) | Auto-optimized oleh GA | Learned oleh backprop |
+| **Fleksibilitas** | Tetap (static) | Adaptif (evolved) | Sangat adaptif (learned) |
+| **Interpretabilitas** | ✅ Sangat tinggi | ⚠️ Sedang (harus lihat MF) | ❌ Black box |
+| **Waktu Setup** | ⚡ Instan | 🕐 30–80 s (GA evolution) | 🕐 5–15 s (training) |
+| **Bias** | 👤 Bias pakar | 🧬 Bias fitness function | 📊 Bias training data |
+| **Kapan Pakai?** | Expert available | Auto-tuning diinginkan | Data melimpah |
+
+### Mengapa Ketiga Model Bisa Memberikan Hasil Berbeda?
+
+**FIS Manual** → Rule-based, hasil konsisten tapi terbatas pada rule yang dibuat pakar
+
+**GA-Tuned FIS** → Rule sama, tapi membership functions di-optimize untuk **fit maksimal dengan preferensi user saat ini**. Bisa overfitting jika pop size/gen terlalu kecil.
+
+**Neuro-Fuzzy ANN** → Learns dari training data, bukan "custom" per user. Lebih general tapi kurang personalisasi.
 
 ### Cara Kerja Skor (0–100)
 
-Kedua model menggunakan strategi gabungan:
+Ketiga model menggunakan strategi **fuzzy inference** + **proximity matching**:
 
-- **Skor Model** (70% FIS / 65% ANN): Seberapa "baik" lagu tersebut secara absolut
-- **Skor Proximity** (30% / 35%): Seberapa dekat fitur lagu dengan preferensi Anda
+```
+Final Score = w₁ × Fuzzy_Output + w₂ × Proximity_Score
+              w₁ = 65–70%              w₂ = 30–35%
+```
+
+**Fuzzy Output:**
+- Inference: Berapa derajat membership lagu pada output fuzzy sets (Low/Medium/High Recommendation)
+- Range: [0, 1] di-scale ke [0, 100]
+
+**Proximity Score:**
+- Euclidean distance antara fitur lagu & preferensi user dalam 6D space
+- Closer = higher score
+
+**Perbedaan antar model:**
+- **FIS Manual:** Fuzzy rules hardcoded
+- **GA-Tuned FIS:** Fuzzy rules sama, tapi MF parameters evolved → fuzzy output bisa sangat berbeda
+- **Neuro-Fuzzy:** Fuzzy rules & MF parameters learned from data → completely different scoring
 
 ---
 
