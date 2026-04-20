@@ -1,8 +1,11 @@
-# 🎵 SONIC MIND — Panduan Penggunaan Aplikasi
+﻿# 🎵 SONIC MIND — Panduan Penggunaan Aplikasi
 
-**Proyek UTS Soft Computing**  
-**Judul:** The Intelligence Battle: Human Expert vs. Evolutionary Tuning & Neuro-Fuzzy  
-**Mahasiswa:** Hamud Abdul Aziz (NPM: 10020230042)  
+**Proyek UTS Soft Computing**
+
+**Judul:** The Intelligence Battle: Human Expert vs. Evolutionary Tuning & Neuro-Fuzzy
+
+**Mahasiswa:** 
+
 **Program Studi:** Teknik Informatika — Universitas Padjadjaran
 
 ---
@@ -10,6 +13,7 @@
 ## 📋 Persyaratan Sistem
 
 ### Perangkat Keras (Minimum)
+
 | Komponen | Minimum | Rekomendasi |
 |----------|---------|-------------|
 | RAM | 4 GB | 8 GB |
@@ -17,6 +21,7 @@
 | CPU | Dual-core | Quad-core |
 
 ### Perangkat Lunak
+
 - **Python** versi 3.9 atau lebih baru
 - **pip** (Python package manager) — biasanya sudah terinstal bersama Python
 
@@ -132,10 +137,13 @@ Atur preferensi musik Anda menggunakan **6 slider**:
 | 🌟 **Popularity** | 0 – 100 | Preferensi popularitas lagu. 100 = lagu hits terkenal |
 
 **Contoh Preset:**
-- 🎉 *Party/Dance*: Energy=0.85, Dance=0.85, Valence=0.7, Speech=0.05, Acoustic=0.1, Pop=80
-- 😌 *Chill/Relax*: Energy=0.25, Dance=0.35, Valence=0.6, Speech=0.05, Acoustic=0.7, Pop=50
-- 🎸 *Rock*: Energy=0.8, Dance=0.45, Valence=0.4, Speech=0.07, Acoustic=0.15, Pop=65
-- 🎵 *Jazz*: Energy=0.35, Dance=0.5, Valence=0.55, Speech=0.05, Acoustic=0.65, Pop=40
+
+| Preset | Energy | Dance | Valence | Speech | Acoustic | Pop |
+|--------|--------|-------|---------|--------|----------|-----|
+| 🎉 Party/Dance | 0.85 | 0.85 | 0.7 | 0.05 | 0.1 | 80 |
+| 😌 Chill/Relax | 0.25 | 0.35 | 0.6 | 0.05 | 0.7 | 50 |
+| 🎸 Rock | 0.8 | 0.45 | 0.4 | 0.07 | 0.15 | 65 |
+| 🎵 Jazz | 0.35 | 0.5 | 0.55 | 0.05 | 0.65 | 40 |
 
 ### 2. Tombol "Generate Recommendations" 🚀
 
@@ -148,16 +156,19 @@ hasilnya ditampilkan berdampingan.
 Hasil ditampilkan dalam **2 kolom**:
 
 **Kolom Kiri — 👤 Model A: Human Expert FIS**
+
 - Tabel berisi 5 lagu terbaik menurut sistem fuzzy manual
 - Badge biru menunjukkan waktu eksekusi (biasanya < 100 ms)
 - Kolom: Track Name | Artist | Match Score | Energy | Dance | Valence
 
 **Kolom Kanan — 🤖 Model B: Neuro-Fuzzy (ANN)**
+
 - Tabel berisi 5 lagu terbaik menurut model ANN
 - Badge pink menunjukkan waktu eksekusi (biasanya < 50 ms setelah training)
 - Format tabel sama dengan kolom kiri
 
-**Banner Pemenang 🏆**  
+**Banner Pemenang 🏆**
+
 Tepat di bawah kedua tabel, banner emas menampilkan model mana yang
 menghasilkan rata-rata skor lebih tinggi untuk preferensi saat ini.
 
@@ -166,16 +177,19 @@ menghasilkan rata-rata skor lebih tinggi untuk preferensi saat ini.
 Klik tab-tab berikut di bagian bawah halaman:
 
 **Tab 🕸️ Radar Chart**
+
 - Menampilkan 3 poligon: FIS (biru), ANN (pink), Preferensi Anda (kuning)
 - Semakin tumpang tindih poligon model dengan preferensi Anda → semakin relevan rekomendasinya
 - Sumbu: danceability, energy, valence, speechiness, acousticness
 
 **Tab 📊 Score Bars**
+
 - Dua bar chart horizontal berdampingan (FIS vs ANN)
 - Setiap bar = satu lagu rekomendasi, panjang bar = skor kecocokan (0–100)
 - Warna lebih terang = skor lebih tinggi
 
 **Tab 🌡️ Feature Heatmap**
+
 - Grid 10×6: baris = 10 lagu (5 FIS + 5 ANN), kolom = 6 fitur audio
 - Warna terang = nilai fitur tinggi; gelap = rendah
 - Berguna untuk melihat perbedaan karakteristik lagu yang dipilih kedua model
@@ -183,6 +197,7 @@ Klik tab-tab berikut di bagian bawah halaman:
 ### 5. Analisis Overlap
 
 Di bagian bawah halaman, **Overlap Analysis** menunjukkan:
+
 - Berapa lagu yang hanya direkomendasikan FIS
 - Berapa lagu yang direkomendasikan oleh KEDUA model (sepakat)
 - Berapa lagu yang hanya direkomendasikan ANN
@@ -207,6 +222,7 @@ lagu terbaik untuk preferensi tersebut.
 ### Cara Kerja Skor (0–100)
 
 Kedua model menggunakan strategi gabungan:
+
 - **Skor Model** (70% FIS / 65% ANN): Seberapa "baik" lagu tersebut secara absolut
 - **Skor Proximity** (30% / 35%): Seberapa dekat fitur lagu dengan preferensi Anda
 
@@ -227,7 +243,3 @@ Kedua model menggunakan strategi gabungan:
 ## 📦 Menghentikan Aplikasi
 
 Tekan `Ctrl + C` di terminal untuk menghentikan server Streamlit.
-
----
-#   s o f t c o m - s o n g - r e c o m e n d a t i o n  
- 
