@@ -1,5 +1,5 @@
 """
-app.py — The Intelligence Battle: Human Expert vs. GA-Tuned FIS vs. Neuro-Fuzzy
+app.py — SONG RECOMENDATION SYSTEM: Human Expert vs. GA-Tuned FIS vs. Neuro-Fuzzy
 Streamlit GUI lengkap yang mempertandingkan tiga paradigma Soft Computing.
 """
 
@@ -25,7 +25,7 @@ from data.loader          import load_dataset
 # PAGE CONFIG
 # ════════════════════════════════════════════════════════════════════════════
 st.set_page_config(
-    page_title="The Intelligence Battle",
+    page_title="SONG RECOMENDATION SYSTEM",
     page_icon="🎵",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -209,6 +209,104 @@ def mf_shift_chart(ga_model, feature="energy"):
         height=290, margin=dict(l=10,r=10,t=35,b=10))
     return fig
 
+def curve_shift_analysis(ga_model):
+    """Analisis pergerakan kurva: Visualisasi perubahan parameter MF di semua fitur"""
+    cmp = ga_model.get_mf_comparison()
+    man = cmp["manual"]
+    opt = cmp["optimised"]
+    
+    # Calculate shifts for all features
+    features = list(man.keys())
+    shift_data = []
+    
+    for feat in features:
+        for i, label in enumerate(["Low","Mid","High"]):
+            dc = opt[feat]["centers"][i] - man[feat]["centers"][i]
+            ds = opt[feat]["sigmas"][i] - man[feat]["sigmas"][i]
+            shift_data.append({
+                "Feature": feat.capitalize(),
+                "MF": label,
+                "Delta Center": dc,
+                "Delta Sigma": ds,
+                "Total Shift": np.sqrt(dc**2 + ds**2)
+            })
+    
+    shift_df = pd.DataFrame(shift_data)
+    
+    # Create 2-column subplot: Heatmap + Shift Magnitude
+    fig = make_subplots(
+        rows=1, cols=2,
+        subplot_titles=("Pergeseran Parameter (Delta)", "Magnitude Shift per Feature"),
+        specs=[[{"type":"heatmap"}, {"type":"bar"}]],
+        horizontal_spacing=0.12)
+    
+    # Left: Heatmap of shifts
+    pivot = shift_df.pivot_table(
+        values="Delta Center", 
+        index=["Feature","MF"], 
+        columns=None)
+    
+    delta_matrix = []
+    delta_labels = []
+    for feat in features:
+        for mf in ["Low","Mid","High"]:
+            row_data = shift_df[(shift_df["Feature"]==feat.capitalize()) & 
+                               (shift_df["MF"]==mf)]
+            if not row_data.empty:
+                delta_matrix.append(row_data["Delta Center"].values[0])
+                delta_labels.append(f"{feat[:4].upper()} {mf[0]}")
+    
+    colors_hm = []
+    for val in delta_matrix:
+        if val > 0.05:
+            colors_hm.append("#34d399")  # Green shift
+        elif val < -0.05:
+            colors_hm.append("#f472b6")  # Pink shift
+        else:
+            colors_hm.append("#fbbf24")  # Yellow stable
+    
+    fig.add_trace(go.Bar(
+        y=delta_labels, x=delta_matrix,
+        orientation="h",
+        marker=dict(color=colors_hm),
+        name="Delta Center",
+        text=[f"{v:.3f}" for v in delta_matrix],
+        textposition="outside"),
+        row=1, col=1)
+    
+    # Right: Magnitude
+    mag_by_feat = shift_df.groupby("Feature")["Total Shift"].mean().sort_values(ascending=False)
+    colors_mag = ["#60a5fa" if i==0 else "#34d399" if i==1 else "#f472b6" 
+                  for i in range(len(mag_by_feat))]
+    
+    fig.add_trace(go.Bar(
+        x=mag_by_feat.index, y=mag_by_feat.values,
+        marker=dict(color=colors_mag),
+        name="Avg Magnitude",
+        text=[f"{v:.3f}" for v in mag_by_feat.values],
+        textposition="outside"),
+        row=1, col=2)
+    
+    # Update layout
+    fig.update_xaxes(title_text="Delta Center Value", row=1, col=1,
+                    color="rgba(255,255,255,0.6)", gridcolor="rgba(255,255,255,0.06)")
+    fig.update_yaxes(title_text="", row=1, col=1,
+                    color="rgba(255,255,255,0.6)")
+    
+    fig.update_xaxes(title_text="Feature", row=1, col=2,
+                    color="rgba(255,255,255,0.6)", gridcolor="rgba(255,255,255,0.06)")
+    fig.update_yaxes(title_text="Avg Shift Magnitude", row=1, col=2,
+                    color="rgba(255,255,255,0.6)", gridcolor="rgba(255,255,255,0.06)")
+    
+    fig.update_annotations(font=dict(color="rgba(255,255,255,0.8)", size=10))
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(color="white"),
+        showlegend=False,
+        height=350, margin=dict(l=80,r=100,t=40,b=50))
+    
+    return fig, shift_df
+
 def feature_heatmap_3(ra, rb, rc):
     cols = RADAR_FEATS + ["popularity"]
     frames = []
@@ -291,23 +389,23 @@ def accuracy_interpretability_tradeoff(recs_a, recs_b, recs_c, time_a, time_b, t
 def decision_guide_html():
     """Interactive decision guide for model selection"""
     return """
-    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(99,102,241,0.3);padding:20px;border-radius:12px;color:white;font-family:sans-serif;">
-        <h3 style="font-family:'Space Mono';color:#60a5fa;margin-bottom:15px;">🎯 Decision Guide: Kapan Pakai Model Mana?</h3>
+    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(99,102,241,0.3);padding:20px;border-radius:12px;color:white;font-family:sans-serif;margin-top:20px;">
+        <h3 style="font-family:'Space Mono';color:#60a5fa;margin-bottom:15px;margin-top:0;">🎯 Decision Guide: Kapan Pakai Model Mana?</h3>
         
-        <div style="margin-bottom:15px;padding:12px;background:rgba(96,165,250,0.1);border-left:4px solid #60a5fa;">
-            <h4 style="color:#60a5fa;margin:0 0 8px 0;">👤 FIS Manual</h4>
+        <div style="margin-bottom:15px;padding:12px;background:rgba(96,165,250,0.1);border-left:4px solid #60a5fa;border-radius:4px;">
+            <h4 style="color:#60a5fa;margin:0 0 8px 0;font-size:1rem;">👤 FIS Manual</h4>
             <p style="margin:0;font-size:0.9rem;"><b>Gunakan ketika:</b> Domain expert tersedia | Akuntabilitas krusial | Dataset kecil | Real-time penting</p>
             <p style="margin:4px 0 0 0;font-size:0.85rem;color:#a5f6fc;"><b>✅ Akurasi:</b> 82.3 | <b>✅ Interpretability:</b> 95% | <b>⚡ Runtime:</b> 100-200ms</p>
         </div>
         
-        <div style="margin-bottom:15px;padding:12px;background:rgba(52,211,153,0.1);border-left:4px solid #34d399;">
-            <h4 style="color:#34d399;margin:0 0 8px 0;">🧬 GA-Tuned FIS — BEST COMPROMISE</h4>
+        <div style="margin-bottom:15px;padding:12px;background:rgba(52,211,153,0.1);border-left:4px solid #34d399;border-radius:4px;">
+            <h4 style="color:#34d399;margin:0 0 8px 0;font-size:1rem;">🧬 GA-Tuned FIS &mdash; BEST COMPROMISE</h4>
             <p style="margin:0;font-size:0.9rem;"><b>Gunakan ketika:</b> Rule structure jelas, parameter sulit | Kecil-menengah dataset | Perlu transparansi + auto-tuning</p>
             <p style="margin:4px 0 0 0;font-size:0.85rem;color:#a5f6fc;"><b>✅ Akurasi:</b> 80.0 | <b>⚠️ Interpretability:</b> 55% | <b>🕐 Runtime:</b> 30-80s</p>
         </div>
         
-        <div style="padding:12px;background:rgba(244,114,182,0.1);border-left:4px solid #f472b6;">
-            <h4 style="color:#f472b6;margin:0 0 8px 0;">🤖 Neuro-Fuzzy ANN</h4>
+        <div style="padding:12px;background:rgba(244,114,182,0.1);border-left:4px solid #f472b6;border-radius:4px;">
+            <h4 style="color:#f472b6;margin:0 0 8px 0;font-size:1rem;">🤖 Neuro-Fuzzy ANN</h4>
             <p style="margin:0;font-size:0.9rem;"><b>Gunakan ketika:</b> Big Data (jutaan records) | Non-linear patterns | Akurasi &gt; interpretabilitas</p>
             <p style="margin:4px 0 0 0;font-size:0.85rem;color:#ff9999;"><b>❌ Akurasi (musik):</b> 69.2 | <b>❌ Interpretability:</b> 15% | <b>⚡ Runtime:</b> 200-500ms</p>
             <p style="margin:4px 0 0 0;font-size:0.8rem;color:#fbbf24;"><b>⚠️ NOTE:</b> Untuk kasus musik, ANN kurang cocok. Cocok untuk Big Data dengan pola kompleks.</p>
@@ -323,7 +421,7 @@ def main():
     <div style="text-align:center;padding:16px 0 8px;">
         <div style="font-size:2.5rem">🎵</div>
         <h1 style="color:white;margin:4px 0;font-size:1.85rem;letter-spacing:3px;">
-            THE INTELLIGENCE BATTLE
+            SONG RECOMENDATION SYSTEM
         </h1>
         <p style="color:rgba(255,255,255,0.45);font-size:.9rem;margin-top:4px;">
             <span style="color:#60a5fa">👤 FIS Manual</span> &nbsp;·&nbsp;
@@ -457,8 +555,8 @@ def main():
         st.markdown("---")
         st.markdown("### 📈 Comparison Visualizations")
 
-        tab1,tab2,tab3,tab4,tab5 = st.tabs([
-            "🕸️ Radar","📊 Scores","🌡️ Heatmap","🧬 GA Convergence","📐 MF Shift"])
+        tab1,tab2,tab3,tab4,tab5,tab6 = st.tabs([
+            "🕸️ Radar","📊 Scores","🌡️ Heatmap","🧬 GA Convergence","📐 MF Shift","📉 Curve Shift"])
 
         with tab1:
             st.plotly_chart(radar_chart_3(recs_a,recs_b,recs_c,user_prefs),
@@ -507,6 +605,47 @@ def main():
             })
             st.dataframe(param, width='stretch', hide_index=True)
             st.caption("Delta positif = kurva bergeser ke kanan / melebar.")
+
+        with tab6:
+            st.markdown("#### Analisis Pergerakan Kurva (Curve Shift Analysis)")
+            st.markdown("""
+            Visualisasi ini menunjukkan **seberapa jauh dan ke arah mana** membership function bergeser 
+            untuk setiap fitur selama evolusi GA. Shift besar menunjukkan GA melakukan optimasi signifikan.
+            """)
+            
+            shift_fig, shift_data = curve_shift_analysis(ga_model)
+            st.plotly_chart(shift_fig, width='stretch')
+            
+            col_shift1, col_shift2 = st.columns(2)
+            with col_shift1:
+                st.subheader("Fitur Paling Bergeser")
+                top_shifts = shift_data.groupby("Feature")["Total Shift"].mean().nlargest(3)
+                for feat, mag in top_shifts.items():
+                    st.markdown(f"**{feat}**: {mag:.4f}")
+            
+            with col_shift2:
+                st.subheader("Fitur Paling Stabil")
+                stable_shifts = shift_data.groupby("Feature")["Total Shift"].mean().nsmallest(3)
+                for feat, mag in stable_shifts.items():
+                    st.markdown(f"**{feat}**: {mag:.4f}")
+            
+            st.markdown("---")
+            st.subheader("Detail Pergeseran Parameter")
+            
+            # Show all shifts in table
+            display_df = shift_data.copy()
+            display_df["Delta Center"] = display_df["Delta Center"].round(4)
+            display_df["Delta Sigma"] = display_df["Delta Sigma"].round(4)
+            display_df["Total Shift"] = display_df["Total Shift"].round(4)
+            st.dataframe(display_df[["Feature","MF","Delta Center","Delta Sigma","Total Shift"]], 
+                        width='stretch', hide_index=True)
+            
+            st.caption("""
+            💡 **Interpretasi**:
+            - **Delta Center > 0**: Kurva bergeser ke kanan (lebih prefer nilai tinggi)
+            - **Delta Sigma > 0**: Kurva melebar (lebih toleran dengan range nilai)
+            - **Total Shift**: Magnitude perubahan (√(ΔC² + ΔS²))
+            """)
 
         # ═══════════════════════════════════════════════════════════════════════════
         # COMPARISON & DECISION GUIDE
@@ -563,7 +702,7 @@ def main():
     st.markdown("""
     <div style="text-align:center;color:rgba(255,255,255,.22);font-size:.72rem;font-family:'Space Mono';">
         Hamud Abdul Aziz · NPM: 10020230042 · Teknik Informatika, Universitas Padjadjaran<br>
-        UTS Soft Computing · The Intelligence Battle
+        UTS Soft Computing · SONG RECOMENDATION SYSTEM
     </div>""", unsafe_allow_html=True)
 
 if __name__ == "__main__":
